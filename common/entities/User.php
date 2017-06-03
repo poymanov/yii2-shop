@@ -39,6 +39,11 @@ class User extends ActiveRecord implements IdentityInterface
         return $user;
     }
 
+    public function isActive()
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
     /**
      * @inheritdoc
      */
