@@ -3,7 +3,8 @@
 namespace common\bootstrap;
 
 use yii\base\BootstrapInterface;
-use frontend\services\auth\UserPasswordResetService;
+use frontend\services\auth\PasswordResetService;
+use frontend\services\contact\ContactService;
 
 class SetUp implements BootstrapInterface
 {
@@ -11,8 +12,13 @@ class SetUp implements BootstrapInterface
     {
         $container = \Yii::$container;
 
-        $container->setSingleton(UserPasswordResetService::class, [], [
+        $container->setSingleton(PasswordResetService::class, [], [
             [$app->params['supportEmail'] => $app->name . ' robot'],
+        ]);
+
+        $container->setSingleton(ContactService::class, [], [
+            [$app->params['supportEmail'] => $app->name . ' robot'],
+            $app->params['adminEmail']
         ]);
     }
 }
