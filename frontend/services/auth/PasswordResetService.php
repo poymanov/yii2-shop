@@ -9,7 +9,14 @@ use Yii;
 
 class PasswordResetService
 {
-    public function request(PasswordResetRequestForm $form): void
+    private $supportEmail;
+
+    public function __construct($supportEmail)
+    {
+        $this->supportEmail = $supportEmail;
+    }
+
+    public function request(PasswordResetRequestForm $form)
     {
         /* @var $user User */
         $user = User::findOne([
@@ -33,7 +40,7 @@ class PasswordResetService
                 ['html' => 'passwordResetToken-html', 'text' => 'passwordResetToken-text'],
                 ['user' => $user]
             )
-            ->setFrom([Yii::$app->params['supportEmail'] => Yii::$app->name . ' robot'])
+            ->setFrom($this->supportEmail)
             ->setTo($user->email)
             ->setSubject('Password reset for ' . Yii::$app->name)
             ->send();
@@ -43,7 +50,7 @@ class PasswordResetService
         }
     }
 
-    public function validateToken($token): void
+    public function validateToken($token)
     {
         if (empty($token) || !is_string($token)) {
             throw new \DomainException('Password reset token cannot be blank.');
@@ -53,7 +60,7 @@ class PasswordResetService
         }
     }
 
-    public function reset(string $token, ResetPasswordForm $form): void
+    public function reset($token, ResetPasswordForm $form)
     {
         $user = User::findByPasswordResetToken($token);
 
