@@ -19,21 +19,15 @@ class PasswordResetService
 
     public function request(PasswordResetRequestForm $form)
     {
-        /* @var $user User */
-        $user = User::findOne([
-            'status' => User::STATUS_ACTIVE,
-            'email' => $form->email,
-        ]);
+        $user = $this->getByEmail($form->email);
 
-        if (!$user) {
+        if (!$user->isActive()) {
             throw new \DomainException('User is not found.');
         }
 
         $user->requestPasswordReset();
 
-        if (!$user->save()) {
-            throw new \RuntimeException('Saving error.');
-        }
+        $this->save($user);
 
         $sent = $this
             ->mailer
@@ -55,21 +49,38 @@ class PasswordResetService
         if (empty($token) || !is_string($token)) {
             throw new \DomainException('Password reset token cannot be blank.');
         }
-        if (!User::findByPasswordResetToken($token)) {
+
+        if (!$this->existsByPasswordResetToken($token)) {
             throw new \DomainException('Wrong password reset token.');
         }
     }
 
     public function reset($token, ResetPasswordForm $form)
     {
-        $user = User::findByPasswordResetToken($token);
-
-        if (!$user) {
+        $user = $this->getByPasswordResetToken($token);
+        $user->resetPassword($form->password);
+        $this->save($user);
+    }
+    private function getByEmail($email)
+    {
+        if (!$user = User::findOne(['email' => $email])) {
             throw new \DomainException('User is not found.');
         }
-
-        $user->resetPassword($form->password);
-
+        return $user;
+    }
+    private function existsByPasswordResetToken($token)
+    {
+        return (bool) User::findByPasswordResetToken($token);
+    }
+    private function getByPasswordResetToken($token)
+    {
+        if (!$user = User::findByPasswordResetToken($token)) {
+            throw new \DomainException('User is not found.');
+        }
+        return $user;
+    }
+    private function save(User $user)
+    {
         if (!$user->save()) {
             throw new \RuntimeException('Saving error.');
         }
