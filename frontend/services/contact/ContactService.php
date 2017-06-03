@@ -9,16 +9,14 @@ class ContactService
     private $supportEmail;
     private $adminEmail;
 
-    public function __construct($supportEmail, $adminEmail)
+    public function __construct($adminEmail)
     {
-        $this->supportEmail = $supportEmail;
         $this->adminEmail = $adminEmail;
     }
 
     public function send(ContactForm $form)
     {
         $sent = \Yii::$app->mailer->compose()
-            ->setFrom($this->supportEmail)
             ->setTo($this->adminEmail)
             ->setSubject($form->subject)
             ->setTextBody($form->body)
