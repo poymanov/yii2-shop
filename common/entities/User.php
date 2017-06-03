@@ -15,6 +15,7 @@ use yii\web\IdentityInterface;
  * @property string $username
  * @property string $password_hash
  * @property string $password_reset_token
+ * @property string $email_confirm_token
  * @property string $email
  * @property string $auth_key
  * @property integer $status
@@ -24,19 +25,33 @@ use yii\web\IdentityInterface;
  */
 class User extends ActiveRecord implements IdentityInterface
 {
-    const STATUS_DELETED = 0;
+    const STATUS_WAIT = 0;
     const STATUS_ACTIVE = 10;
 
-    public static function signup($username, $email, $password)
+    public static function requestSignup($username, $email, $password)
     {
         $user = new User();
         $user->username = $username;
         $user->email = $email;
         $user->setPassword($password);
         $user->created_at = time();
-        $user->status = self::STATUS_ACTIVE;
+        $user->status = self::STATUS_WAIT;
         $user->generateAuthKey();
         return $user;
+    }
+
+    public function confirmSignup()
+    {
+        if (!$this->isWait()) {
+            throw new \DomainException('User is already active.');
+        }
+        $this->status = self::STATUS_ACTIVE;
+        $this->removeEmailConfirmToken();
+    }
+
+    public function isWait()
+    {
+        return $this->status === self::STATUS_WAIT;
     }
 
     public function requestPasswordReset()
@@ -84,7 +99,7 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
-            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_WAIT]],
         ];
     }
 
@@ -217,5 +232,21 @@ class User extends ActiveRecord implements IdentityInterface
     private function removePasswordResetToken()
     {
         $this->password_reset_token = null;
+    }
+
+    /**
+     * Generates new password reset token
+     */
+    private function generateEmailConfirmToken()
+    {
+        $this->email_confirm_token = Yii::$app->security->generateRandomString();
+    }
+
+    /**
+     * Removes email confirm token
+     */
+    private function removeEmailConfirmToken()
+    {
+        $this->email_confirm_token = null;
     }
 }
