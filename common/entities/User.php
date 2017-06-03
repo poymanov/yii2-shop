@@ -7,7 +7,6 @@ use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
-use common\entities\InstantiateTrait;
 
 /**
  * User model
@@ -25,20 +24,19 @@ use common\entities\InstantiateTrait;
  */
 class User extends ActiveRecord implements IdentityInterface
 {
-    use InstantiateTrait;
-
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 10;
 
-    public function __construct($username, $email, $password)
+    public static function signup($username, $email, $password)
     {
-        $this->username = $username;
-        $this->email = $email;
-        $this->setPassword($password);
-        $this->created_at = time();
-        $this->status = self::STATUS_ACTIVE;
-        $this->generateAuthKey();
-        parent::__construct();
+        $user = new User();
+        $user->username = $username;
+        $user->email = $email;
+        $user->setPassword($password);
+        $user->created_at = time();
+        $user->status = self::STATUS_ACTIVE;
+        $user->generateAuthKey();
+        return $user;
     }
 
     /**
