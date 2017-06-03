@@ -1,4 +1,5 @@
 <?php
+
 namespace common\entities;
 
 use Yii;
@@ -6,6 +7,7 @@ use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
+use common\entities\InstantiateTrait;
 
 /**
  * User model
@@ -23,9 +25,21 @@ use yii\web\IdentityInterface;
  */
 class User extends ActiveRecord implements IdentityInterface
 {
+    use InstantiateTrait;
+
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 10;
 
+    public function __construct($username, $email, $password)
+    {
+        $this->username = $username;
+        $this->email = $email;
+        $this->setPassword($password);
+        $this->created_at = time();
+        $this->status = self::STATUS_ACTIVE;
+        $this->generateAuthKey();
+        parent::__construct();
+    }
 
     /**
      * @inheritdoc
@@ -51,7 +65,6 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
-            ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
         ];
     }
@@ -166,7 +179,7 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Generates "remember me" authentication key
      */
-    public function generateAuthKey()
+    private function generateAuthKey()
     {
         $this->auth_key = Yii::$app->security->generateRandomString();
     }
