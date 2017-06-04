@@ -3,7 +3,7 @@
 namespace frontend\tests\functional;
 
 use frontend\tests\FunctionalTester;
-use common\fixtures\User as UserFixture;
+use common\fixtures\UserFixture as UserFixture;
 
 class LoginCest
 {
@@ -36,7 +36,7 @@ class LoginCest
     public function checkWrongPassword(FunctionalTester $I)
     {
         $I->submitForm('#login-form', $this->formParams('admin', 'wrong'));
-        $I->seeValidationError('Incorrect username or password.');
+        $I->see('Incorrect username or password.');
     }
     
     public function checkValidLogin(FunctionalTester $I)

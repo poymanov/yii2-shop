@@ -28,7 +28,7 @@ class ConfirmSignupTest extends Unit
             'email_confirm_token' => null,
         ]);
 
-        $this->expectExceptionMessage('User is already active.');
+        $this->expectExceptionMessage('UserFixture is already active.');
 
         $user->confirmSignup();
     }

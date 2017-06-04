@@ -2,7 +2,7 @@
 
 namespace frontend\tests\unit\forms;
 
-use common\fixtures\User as UserFixture;
+use common\fixtures\UserFixture as UserFixture;
 use frontend\forms\ResetPasswordForm;
 
 class ResetPasswordFormTest extends \Codeception\Test\Unit

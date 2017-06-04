@@ -24,7 +24,7 @@ class PasswordResetService
         $user = $this->users->getByEmail($form->email);
 
         if (!$user->isActive()) {
-            throw new \DomainException('User is not found.');
+            throw new \DomainException('UserFixture is not found.');
         }
 
         $user->requestPasswordReset();
