@@ -50,4 +50,9 @@ class UserRepository
         }
         return $user;
     }
+
+    public function get($id)
+    {
+        return $this->getBy(['id' => $id]);
+    }
 }

@@ -67,6 +67,18 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->status === self::STATUS_WAIT;
     }
 
+    public function attachNetwork($network, $identity)
+    {
+        $networks = $this->networks;
+        foreach ($networks as $current) {
+            if ($current->isFor($network, $identity)) {
+                throw new \DomainException('Network is already attached.');
+            }
+        }
+        $networks[] = Network::create($network, $identity);
+        $this->networks = $networks;
+    }
+
     public function requestPasswordReset()
     {
         if (!empty($this->password_reset_token) && self::isPasswordResetTokenValid($this->password_reset_token)) {
@@ -74,6 +86,7 @@ class User extends ActiveRecord implements IdentityInterface
         }
         $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
     }
+
     public function resetPassword($password)
     {
         if (empty($this->password_reset_token)) {
