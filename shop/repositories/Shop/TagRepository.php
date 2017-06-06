@@ -22,6 +22,13 @@ class TagRepository
         }
     }
 
+
+    public function findByName($name): ?Tag
+    {
+        return Tag::findOne(['name' => $name]);
+    }
+
+
     public function remove(Tag $tag)
     {
         if (!$tag->delete()) {
