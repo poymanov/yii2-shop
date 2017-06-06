@@ -6,8 +6,8 @@ use shop\entities\Meta;
 use shop\entities\Shop\Product\Product;
 use shop\forms\manage\Shop\Product\CategoriesForm;
 use shop\forms\manage\Shop\Product\ProductCreateForm;
-use shop\repositories\Shop\BrandRepository;
-use shop\repositories\Shop\CategoryRepository;
+use shop\repositories\BrandRepository;
+use shop\repositories\CategoryRepository;
 use shop\repositories\Shop\ProductRepository;
 
 class ProductManageService
@@ -49,6 +49,10 @@ class ProductManageService
         foreach ($form->categories->others as $otherId) {
             $category = $this->categories->get($otherId);
             $product->assignCategory($category->id);
+        }
+
+        foreach ($form->values as $value) {
+            $product->setValue($value->id, $value->value);
         }
 
         $this->products->save($product);

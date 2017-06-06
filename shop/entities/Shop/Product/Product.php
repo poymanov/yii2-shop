@@ -2,6 +2,7 @@
 
 namespace shop\entities\Shop\Product;
 
+use lhs\Yii2SaveRelationsBehavior\SaveRelationsBehavior;
 use shop\entities\behaviors\MetaBehavior;
 use shop\entities\Meta;
 use shop\entities\Shop\Brand;
@@ -23,6 +24,8 @@ use yii\db\ActiveRecord;
  * @property Meta $meta
  * @property Brand $brand
  * @property Category $category
+ * @property CategoryAssignment[] $categoryAssignments
+ * @property Value[] $values
  */
 class Product extends ActiveRecord
 {
@@ -45,6 +48,67 @@ class Product extends ActiveRecord
         $this->price_new = $new;
         $this->price_old = $old;
     }
+    public function changeMainCategory($categoryId): void
+    {
+        $this->category_id = $categoryId;
+    }
+
+    public function setValue($id, $value): void
+    {
+        $values = $this->values;
+        foreach ($values as $val) {
+            if ($val->isForCharacteristic($id)) {
+                $val->change($value);
+                $this->values = $values;
+                return;
+            }
+        }
+        $values[] = Value::create($id, $value);
+        $this->values = $values;
+    }
+
+    public function getValue($id): Value
+    {
+        $values = $this->values;
+        foreach ($values as $val) {
+            if ($val->isForCharacteristic($id)) {
+                return $val;
+            }
+        }
+        return Value::blank($id);
+    }
+
+    // Categories
+
+    public function assignCategory($id): void
+    {
+        $assignments = $this->categoryAssignments;
+        foreach ($assignments as $assignment) {
+            if ($assignment->isForCategory($id)) {
+                return;
+            }
+        }
+        $assignments[] = CategoryAssignment::create($id);
+        $this->categoryAssignments = $assignments;
+    }
+
+    public function revokeCategory($id): void
+    {
+        $assignments = $this->categoryAssignments;
+        foreach ($assignments as $i => $assignment) {
+            if ($assignment->isForCategory($id)) {
+                unset($assignments[$i]);
+                $this->categoryAssignments = $assignments;
+                return;
+            }
+        }
+        throw new \DomainException('Assignment is not found.');
+    }
+
+    public function revokeCategories(): void
+    {
+        $this->categoryAssignments = [];
+    }
 
     ##########################
 
@@ -58,6 +122,16 @@ class Product extends ActiveRecord
         return $this->hasOne(Category::class, ['id' => 'category_id']);
     }
 
+    public function getCategoryAssignments(): ActiveQuery
+    {
+        return $this->hasMany(CategoryAssignment::class, ['product_id' => 'id']);
+    }
+
+    public function getValues(): ActiveQuery
+    {
+        return $this->hasMany(Value::class, ['product_id' => 'id']);
+    }
+
     ##########################
 
     public static function tableName(): string
@@ -69,6 +143,17 @@ class Product extends ActiveRecord
     {
         return [
             MetaBehavior::className(),
+            [
+                'class' => SaveRelationsBehavior::className(),
+                'relations' => ['categoryAssignments', 'values'],
+            ],
+        ];
+    }
+
+    public function transactions()
+    {
+        return [
+            self::SCENARIO_DEFAULT => self::OP_ALL,
         ];
     }
 }
