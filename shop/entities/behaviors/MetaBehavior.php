@@ -6,6 +6,7 @@ use shop\entities\Meta;
 use yii\base\Behavior;
 use yii\base\Event;
 use yii\db\ActiveRecord;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 
 class MetaBehavior extends Behavior
@@ -13,7 +14,7 @@ class MetaBehavior extends Behavior
     public $attribute = 'meta';
     public $jsonAttribute = 'meta_json';
 
-    public function events()
+    public function events(): array
     {
         return [
             ActiveRecord::EVENT_AFTER_FIND => 'onAfterFind',
@@ -22,14 +23,18 @@ class MetaBehavior extends Behavior
         ];
     }
 
-    public function onAfterFind(Event $event): void
+    public function onAfterFind(Event $event)
     {
         $model = $event->sender;
         $meta = Json::decode($model->getAttribute($this->jsonAttribute));
-        $model->{$this->attribute} = new Meta($meta['title'], $meta['description'], $meta['keywords']);
+        $model->{$this->attribute} = new Meta(
+            ArrayHelper::getValue($meta, 'title'),
+            ArrayHelper::getValue($meta, 'description'),
+            ArrayHelper::getValue($meta, 'keywords')
+        );
     }
 
-    public function onBeforeSave(Event $event): void
+    public function onBeforeSave(Event $event)
     {
         $model = $event->sender;
         $model->setAttribute('meta_json', Json::encode([
